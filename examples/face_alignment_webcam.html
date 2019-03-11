@@ -10,6 +10,10 @@
         <script src="../build/data/face-min.js"></script>
         <script src="../src/alignment/training/Landmarks.js"></script>
         <script src="../src/alignment/training/Regressor.js"></script>
+        <script
+  src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+  integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
+  crossorigin="anonymous"></script>
         
         <script src="../node_modules/dat.gui/build/dat.gui.min.js"></script>
 </head>
@@ -31,13 +35,34 @@
                         height: auto;
                         zoom: 3;
                 }
+                #buttons {
+                        position: absolute;
+                        top: 240px;
+                        left: 0px;
+                        width : 320px;
+                        height: auto;
+                        zoom: 3;
+                }
         </style>
 	<!-- <video id="videoWebcam" width="368" height="288" autoplay loop>
 		<source src="./assets/franck.mp4" type="video/mp4"/>
 		<source src="./assets/franck.ogv" type="video/ogg"/>
 	</video> -->
-        <video id="videoWebcam" preload autoplay loop muted></video>
-        <canvas id="canvasDetection"></canvas>
+        <div>
+                <video id="videoWebcam" preload autoplay loop muted></video>
+                <canvas id="canvasDetection"></canvas>
+        </div>
+        <div id="buttons">
+                <button id="mouthOpen">Record mouth open</button>
+                <button id="mouthClosed">Record mouth cloused</button>   
+                <div id="distText">
+                        
+                </div>
+                <div id="calibrationStatus">
+                        
+                </div>
+        </div>
+        
         
 <script>
         var canvasDetection = document.querySelector('#canvasDetection');
@@ -148,8 +173,24 @@
         }
 
         var distanceBuffer = new Array(10).fill(0);
+        var calibrationBuffer = new Array(50).fill(0);
+        var calibrationInd = 0;
+        var calibrationStatus = ""; //is either "open", "closed", or falsy 
+        var faceStates = {open: 0, closed: 0};
+        var faceThreshold = 0; //set this to difference between states/4
+
         var distanceBufferInd = 0;
         var average = (array) => array.reduce((a, b) => a + b) / array.length;
+
+        $("#mouthOpen").click(function(){
+                calibrationStatus = "open";
+                $("#calibrationStatus").html("Recording open mouth state");
+        });
+
+        $("#mouthClosed").click(function(){
+                calibrationStatus = "closed";
+                $("#calibrationStatus").html("Recording closed mouth state");
+        });
 
         tracker.on('track', function(event) {
                 // clear debug canvasDetection
@@ -167,13 +208,40 @@
                         
                         // display each faceLandmarks
                         displayFaceLandmarksDot(lerpedFacesLandmarks)
-
-                        var totalDist = chinToEyesDistance(faceLandmarks);
-                        distanceBuffer[distanceBufferInd] = totalDist;
-                        distanceBufferInd = (distanceBufferInd + 1) % distanceBuffer.length;
-                        if(distanceBufferInd == 0) console.log(average(distanceBuffer));
+                        
+                        calculateMouthState(faceLandmarks);
+                        
                 });
         })
+
+        function calculateMouthState(faceLandmarks){
+                var totalDist = chinToEyesDistance(faceLandmarks);
+                distanceBuffer[distanceBufferInd] = totalDist;
+                distanceBufferInd = (distanceBufferInd + 1) % distanceBuffer.length;
+                var distAvg = average(distanceBuffer).toFixed(2);
+
+                if(calibrationStatus){
+                        if(calibrationInd == calibrationBuffer.length){
+                                faceStates[calibrationStatus] = average(calibrationBuffer);
+                                calibrationStatus = "";
+                                calibrationInd = 0;
+                                if(faceStates.open > 0 && faceStates.closed > 0) faceThreshold = Math.abs(faceStates.open - faceStates.closed)/4;
+                                $("#calibrationStatus").html("");
+                        } else {
+                                calibrationBuffer[calibrationInd] = totalDist;
+                                calibrationInd++;
+                        }
+                }
+
+                if(faceThreshold > 0) {
+                        var mouthState = "neither";
+                        if(Math.abs(faceStates.open-distAvg) < faceThreshold) mouthState = "open";
+                        else if(Math.abs(faceStates.closed-distAvg) < faceThreshold) mouthState = "closed";
+                        $("#calibrationStatus").html(mouthState);
+                }
+
+                if(distanceBufferInd == 0) $("#distText").html(`dist: ${distAvg} <br> closed: ${faceStates.closed.toFixed(2)} open: closed: ${faceStates.open.toFixed(2)}`);
+        }
 
         function lerpFacesLandmarks(newFaceLandmarks){
                 // init lerpFacesLandmarks if needed

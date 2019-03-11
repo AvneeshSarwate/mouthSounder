@@ -1,5 +1,8 @@
 # tracking.js
 
+(lazy copy for prototyping - original repo readme below)
+
+
 [![Build Status](http://img.shields.io/travis/eduardolundgren/tracking.js.svg?style=flat)](https://travis-ci.org/eduardolundgren/tracking.js)
 [![DevDependencies Status](http://img.shields.io/david/dev/eduardolundgren/tracking.js.svg?style=flat)](https://david-dm.org/eduardolundgren/tracking.js#info=devDependencies)
 
