@@ -16,6 +16,7 @@
   crossorigin="anonymous"></script>
         
         <script src="../node_modules/dat.gui/build/dat.gui.min.js"></script>
+        <script src="../node_modules/tone/build/Tone.js"></script>
 </head>
 <body>
         <style>
@@ -218,6 +219,11 @@
                 });
         })
 
+        var randNotes = ["C3", "D#3", "F#3", "A3"];
+        var sampler = new Tone.Sampler({
+            "D3" : "./assets/wow.mp3",
+        }).toMaster();
+
         function calculateMouthState(faceLandmarks){
                 var totalDist = chinToEyesDistance(faceLandmarks);
                 distanceBuffer[distanceBufferInd] = totalDist;
@@ -245,6 +251,7 @@
                         if(mouthState === "open" && lastDefiniteState === "closed"){
                                 //trigger mouth opened event
                                 $("#triggerLog").html("ON");
+                                sampler.triggerAttack("D3");
                         }
 
                         else if(mouthState === "closed" && lastDefiniteState === "open"){
