@@ -261,12 +261,14 @@
                                 var wordInd = Math.floor(Math.random() * wordlist.length);
                                 audioSource.currentTime = wordlist[wordInd].start;
                                 audioSource.play();
+                                console.log("playing at", audioSource.currentTime);
                         }
 
                         else if(mouthState === "closed" && lastDefiniteState === "open"){
                                 //trigger mouth closed event
                                 $("#triggerLog").html("OFF");
                                 audioSource.pause();
+                                console.log("pause at", audioSource.currentTime);
                         } else $("#triggerLog").html("");
 
                         if(mouthState != "neither") lastDefiniteState = mouthState;
