@@ -17,6 +17,7 @@
         
         <script src="../node_modules/dat.gui/build/dat.gui.min.js"></script>
         <script src="../node_modules/tone/build/Tone.js"></script>
+        <script src="./assets/nixon_transcript.js"></script>
 </head>
 <body>
         <style>
@@ -66,6 +67,7 @@
                         
                 </div>
         </div>
+        <audio id="clipAudio" src="./assets/nixon_win.mp3"></audio>
         
         
 <script>
@@ -89,6 +91,10 @@
         gui.add(tracker, 'initialScale', 1.0, 10.0).step(0.1).listen();
         gui.add(tracker, 'stepSize', 0.5, 5).step(0.1).listen();
         
+
+        var wordlist = nixonTranscript.results.map(r => r.alternatives[0].words).flat(1)
+            .map(w => ({word:w.word, start: parseFloat(w.startTime.slice(0, -1)), end: parseFloat(w.endTime.slice(0, -1))}));
+        var audioSource = $("#clipAudio")[0];
 
         var videoElement = document.querySelector('#videoWebcam')
         // tracking.track(videoElement, tracker);
@@ -251,12 +257,16 @@
                         if(mouthState === "open" && lastDefiniteState === "closed"){
                                 //trigger mouth opened event
                                 $("#triggerLog").html("ON");
-                                sampler.triggerAttack("D3");
+                                // sampler.triggerAttack("D3");
+                                var wordInd = Math.floor(Math.random() * wordlist.length);
+                                audioSource.currentTime = wordlist[wordInd].start;
+                                audioSource.play();
                         }
 
                         else if(mouthState === "closed" && lastDefiniteState === "open"){
                                 //trigger mouth closed event
                                 $("#triggerLog").html("OFF");
+                                audioSource.pause();
                         } else $("#triggerLog").html("");
 
                         if(mouthState != "neither") lastDefiniteState = mouthState;
