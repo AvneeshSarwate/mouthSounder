@@ -19,6 +19,7 @@
         <script src="../node_modules/dat.gui/build/dat.gui.min.js"></script>
         <script src="../node_modules/tone/build/Tone.js"></script>
         <script src="./assets/nixon_transcript.js"></script>
+        <script src="./assets/dangerfield.js"></script>
 </head>
 <body>
         <style>
@@ -68,7 +69,6 @@
                         
                 </div>
         </div>
-        <audio id="clipAudio" src="./assets/nixon_win.mp3"></audio>
         
         
 <script>
@@ -93,9 +93,14 @@
         gui.add(tracker, 'stepSize', 0.5, 5).step(0.1).listen();
         
 
-        var wordlist = nixonTranscript.results.map(r => r.alternatives[0].words).flat(1)
+        var wordlist = dangerfieldTranscript.results.map(r => r.alternatives[0].words).flat(1)
             .map(w => ({word:w.word, start: parseFloat(w.startTime.slice(0, -1)), end: parseFloat(w.endTime.slice(0, -1))}));
-        var audioSource = $("#clipAudio")[0];
+
+        var sentenceList = dangerfieldTranscript.results.map(r => ({start: parseFloat(r.alternatives[0].words[0].startTime),
+            end: parseFloat(r.alternatives[0].words.slice(-1)[0].startTime)}))
+
+
+        blobAudioLoad("dangerfield", "./assets/dangerfield.mp3")
 
         var videoElement = document.querySelector('#videoWebcam')
         // tracking.track(videoElement, tracker);
@@ -259,17 +264,17 @@
                                 //trigger mouth opened event
                                 $("#triggerLog").html("ON");
                                 // sampler.triggerAttack("D3");
-                                var wordInd = Math.floor(Math.random() * wordlist.length);
-                                audioSource.currentTime = wordlist[wordInd].start;
-                                audioSource.play();
-                                console.log("playing at", audioSource.currentTime);
+                                var wordInd = Math.floor(Math.random() * sentenceList.length);
+                                audioPlayers["dangerfield"].player.currentTime = sentenceList[wordInd].start;
+                                audioPlayers["dangerfield"].player.play();
+                                console.log("playing at", audioPlayers["dangerfield"].player.currentTime);
                         }
 
                         else if(mouthState === "closed" && lastDefiniteState === "open"){
                                 //trigger mouth closed event
                                 $("#triggerLog").html("OFF");
-                                audioSource.pause();
-                                console.log("pause at", audioSource.currentTime);
+                                audioPlayers["dangerfield"].player.pause();
+                                console.log("pause at", audioPlayers["dangerfield"].player.currentTime);
                         } else $("#triggerLog").html("");
 
                         if(mouthState != "neither") lastDefiniteState = mouthState;

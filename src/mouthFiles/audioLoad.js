@@ -1,10 +1,10 @@
 
 var audioPlayers = {};
 
-var createAudioElement = function(audioBlobURL){
+var createAudioElement = function(audioBlobURL, fileKey){
     const audio = document.createElement('audio');
 
-    audioPlayers[audioBlobURL] = {player:audio, ready: false};
+    audioPlayers[fileKey] = {player:audio, ready: false, url: audioBlobURL};
 
     var playing = false;
     var timeupdate = false;
@@ -25,14 +25,14 @@ var createAudioElement = function(audioBlobURL){
 
     function checkReady() {
         if (playing && timeupdate) {
-            audioPlayers[audioBlobURL].ready = true;
+            audioPlayers[fileKey].ready = true;
         }
     }
 
     audio.src = audioBlobURL;
 }
 
-function blobAudioLoad(audioFileUrl, otherArgs){
+function blobAudioLoad(fileKey, audioFileUrl, otherArgs){
     var req = new XMLHttpRequest();
     req.open('GET', audioFileUrl, true);
     req.responseType = 'blob';
@@ -44,7 +44,7 @@ function blobAudioLoad(audioFileUrl, otherArgs){
             var audioBlob = this.response;
             var audioBlobURL = URL.createObjectURL(audioBlob); // IE10+
           
-            createAudioElement(audioBlobURL);
+            createAudioElement(audioBlobURL, fileKey);
             if(otherArgs && otherArgs.postLoadFunc) otherArgs.postLoadFunc();
         }
     }
