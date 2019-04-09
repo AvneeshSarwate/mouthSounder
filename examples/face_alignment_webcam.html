@@ -100,6 +100,7 @@
             end: parseFloat(r.alternatives[0].words.slice(-1)[0].startTime)}))
 
 
+        //use this to create audio-meter to detect volume - https://github.com/cwilso/volume-meter/
         blobAudioLoad("dangerfield", "./assets/dangerfield.mp3")
 
         var videoElement = document.querySelector('#videoWebcam')
@@ -236,6 +237,8 @@
             "D3" : "./assets/wow.mp3",
         }).toMaster();
 
+        var timeOutId = null;
+
         function calculateMouthState(faceLandmarks){
                 var totalDist = chinToEyesDistance(faceLandmarks);
                 distanceBuffer[distanceBufferInd] = totalDist;
@@ -265,7 +268,10 @@
                                 $("#triggerLog").html("ON");
                                 // sampler.triggerAttack("D3");
                                 var wordInd = Math.floor(Math.random() * sentenceList.length);
-                                audioPlayers["dangerfield"].player.currentTime = sentenceList[wordInd].start;
+                                var startTime = sentenceList[wordInd].start;
+                                var endTime = sentenceList[wordInd].end;
+                                timeoutId = setTimeout(() => audioPlayers["dangerfield"].player.pause, endTime-startTime);
+                                audioPlayers["dangerfield"].player.currentTime = startTime;
                                 audioPlayers["dangerfield"].player.play();
                                 console.log("playing at", audioPlayers["dangerfield"].player.currentTime);
                         }
