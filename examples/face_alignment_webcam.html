@@ -11,6 +11,7 @@
         <script src="../src/alignment/training/Landmarks.js"></script>
         <script src="../src/alignment/training/Regressor.js"></script>
         <script src="../src/mouthFiles/audioLoad.js"></script>
+        <script src="../src/osc.js"></script>
         <script
   src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
   integrity="sha256-3edrmyuQ0w65f8gfBsqowzjJe2iM6n0nKciPUp8y+7E="
@@ -86,6 +87,11 @@
         tracker.setInitialScale(2);
         tracker.setStepSize(1);
 
+        osc = new OSC({
+            discardLateMessages: true
+        });
+
+        osc.connect("localhost", "8086");
         
         var gui = new dat.GUI();
         gui.add(tracker, 'edgesDensity', 0.1, 0.5).step(0.01).listen();
@@ -227,15 +233,14 @@
                         // display each faceLandmarks
                         displayFaceLandmarksDot(lerpedFacesLandmarks)
                         
-                        calculateMouthState(faceLandmarks);
+                        var stateData = calculateMouthState(faceLandmarks);
+                        var oscMsg = new OSC.Message("/mouthData", stateData.avg);
+                        osc.send(oscMsg);
                         
                 });
         })
 
         var randNotes = ["C3", "D#3", "F#3", "A3"];
-        var sampler = new Tone.Sampler({
-            "D3" : "./assets/wow.mp3",
-        }).toMaster();
 
         var timeOutId = null;
 
@@ -258,8 +263,8 @@
                         }
                 }
 
+                var mouthState = "neither";
                 if(faceThreshold > 0) {
-                        var mouthState = "neither";
                         if(Math.abs(faceStates.open-distAvg) < faceThreshold) mouthState = "open";
                         else if(Math.abs(faceStates.closed-distAvg) < faceThreshold) mouthState = "closed";
                         $("#calibrationStatus").html(mouthState);
@@ -287,6 +292,9 @@
                 }
 
                 if(distanceBufferInd == 0) $("#distText").html(`dist: ${distAvg} <br> closed: ${faceStates.closed.toFixed(2)} open: closed: ${faceStates.open.toFixed(2)}`);
+
+                return {avg: distAvg, openDist: faceStates.open, closedDist: faceStates.closed, 
+                    thresh: faceThreshold, state:mouthState};
         }
 
         function lerpFacesLandmarks(newFaceLandmarks){
