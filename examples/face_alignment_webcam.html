@@ -234,7 +234,7 @@
                         displayFaceLandmarksDot(lerpedFacesLandmarks)
                         
                         var stateData = calculateMouthState(faceLandmarks);
-                        var oscMsg = new OSC.Message("/mouthData", stateData.avg);
+                        var oscMsg = new OSC.Message("/mouthData", JSON.stringify(stateData));
                         osc.send(oscMsg);
                         
                 });
@@ -265,8 +265,8 @@
 
                 var mouthState = "neither";
                 if(faceThreshold > 0) {
-                        if(Math.abs(faceStates.open-distAvg) < faceThreshold) mouthState = "open";
-                        else if(Math.abs(faceStates.closed-distAvg) < faceThreshold) mouthState = "closed";
+                        if(Math.abs(faceStates.open-distAvg) < faceThreshold || distAvg > faceStates.open ) mouthState = "open";
+                        else if(Math.abs(faceStates.closed-distAvg) < faceThreshold || distAvg < faceStates.closed ) mouthState = "closed";
                         $("#calibrationStatus").html(mouthState);
                         if(mouthState === "open" && lastDefiniteState === "closed"){
                                 //trigger mouth opened event
@@ -277,14 +277,14 @@
                                 var endTime = sentenceList[wordInd].end;
                                 timeoutId = setTimeout(() => audioPlayers["dangerfield"].player.pause, endTime-startTime);
                                 audioPlayers["dangerfield"].player.currentTime = startTime;
-                                audioPlayers["dangerfield"].player.play();
+                                // audioPlayers["dangerfield"].player.play();
                                 console.log("playing at", audioPlayers["dangerfield"].player.currentTime);
                         }
 
                         else if(mouthState === "closed" && lastDefiniteState === "open"){
                                 //trigger mouth closed event
                                 $("#triggerLog").html("OFF");
-                                audioPlayers["dangerfield"].player.pause();
+                                // audioPlayers["dangerfield"].player.pause();
                                 console.log("pause at", audioPlayers["dangerfield"].player.currentTime);
                         } else $("#triggerLog").html("");
 
